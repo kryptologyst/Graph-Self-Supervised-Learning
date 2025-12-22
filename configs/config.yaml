@@ -1,0 +1,116 @@
+# Configuration for Graph Self-Supervised Learning
+
+# Model configuration
+model:
+  type: "node_masking"  # Options: node_masking, contrastive, graphcl, multi_task
+  encoder:
+    type: "gcn"
+    in_channels: null  # Will be set automatically based on dataset
+    hidden_channels: 64
+    out_channels: 64
+    num_layers: 2
+    dropout: 0.5
+    use_batch_norm: true
+    use_residual: false
+  
+  decoder:
+    type: "attribute"  # Options: attribute, contrastive
+    hidden_channels: 64
+    dropout: 0.5
+    num_layers: 2
+  
+  # SSL-specific parameters
+  mask_ratio: 0.3
+  mask_value: 0.0
+  temperature: 0.1
+  aug_ratio: 0.1
+  
+  # Multi-task weights (only used for multi_task model)
+  task_weights:
+    masking: 1.0
+    contrastive: 0.5
+    graphcl: 0.5
+
+# Training configuration
+training:
+  num_epochs: 100
+  batch_size: 1  # For single graph datasets
+  learning_rate: 0.01
+  weight_decay: 5e-4
+  optimizer: "adam"  # Options: adam, adamw, sgd, rmsprop
+  scheduler: "step"  # Options: step, cosine, plateau, none
+  scheduler_params:
+    step_size: 30
+    gamma: 0.5
+  
+  # Early stopping
+  early_stopping:
+    patience: 20
+    min_delta: 0.001
+    restore_best_weights: true
+  
+  # Logging
+  log_interval: 10
+  use_wandb: false
+  wandb_project: "graph-ssl"
+
+# Data configuration
+data:
+  dataset_name: "cora"  # Options: cora, citeseer, pubmed, corafull, cs, physics, computers, photo, synthetic_sbm_1000
+  root: "data"
+  train_ratio: 0.6
+  val_ratio: 0.2
+  test_ratio: 0.2
+  
+  # Preprocessing
+  add_self_loops: true
+  make_undirected: true
+  normalize_features: true
+  
+  # Synthetic dataset parameters (only used for synthetic datasets)
+  synthetic:
+    num_graphs: 10
+    graph_type: "sbm"  # Options: sbm, ba, random
+    num_nodes: 1000
+    num_features: 64
+    num_classes: 5
+
+# Evaluation configuration
+evaluation:
+  tasks: ["node_classification", "link_prediction", "clustering", "reconstruction"]
+  num_neg_samples: 1000
+  mask_ratio_eval: 0.3
+  
+  # Clustering
+  clustering:
+    n_clusters: null  # Will use number of classes if null
+  
+  # Link prediction
+  link_prediction:
+    num_neg_samples: 1000
+
+# System configuration
+system:
+  device: "auto"  # Options: auto, cuda, mps, cpu
+  seed: 42
+  num_workers: 4
+  pin_memory: true
+  
+  # Reproducibility
+  deterministic: true
+  benchmark: false
+
+# Output configuration
+output:
+  save_dir: "outputs"
+  save_model: true
+  save_embeddings: true
+  save_predictions: true
+  
+  # Visualization
+  create_plots: true
+  plot_types: ["loss_curves", "embeddings_tsne", "attention_heatmap"]
+  
+  # Demo
+  create_demo: true
+  demo_type: "streamlit"  # Options: streamlit, gradio
